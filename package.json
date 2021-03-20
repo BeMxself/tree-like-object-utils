@@ -1,6 +1,6 @@
 {
   "name": "tree-like-object-utils",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "description": "Provide functions to handle Tree-like Object & Object",
   "sideEffects": false,
   "main": "./src/index.js",
@@ -8,8 +8,7 @@
     "lib": "src"
   },
   "scripts": {
-    "build": "webpack",
-    "build-prod": "NODE_ENV=production webpack",
+    "build": "rollup -c",
     "test": "jest"
   },
   "repository": {

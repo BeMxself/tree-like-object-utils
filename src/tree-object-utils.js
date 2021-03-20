@@ -2,7 +2,7 @@
  * @Author: Song Mingxu
  * @Date: 2021-03-12 16:36:18
  * @LastEditors: Song Mingxu
- * @LastEditTime: 2021-03-19 21:30:03
+ * @LastEditTime: 2021-03-23 11:08:48
  * @Description: Tree & Object Utils
  */
 import { getRealType, findIndexByKey } from './utils'
@@ -18,7 +18,10 @@ import { getRealType, findIndexByKey } from './utils'
 
 function normalizeObjectPath(path) {
   if (path instanceof Array) return path
-  return path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(p => p !== '')
+  return path
+    .replace(/\[(\d+)\]/g, '.$1')
+    .split('.')
+    .filter((p) => p !== '')
 }
 
 function normalizeTreePath(path, pathSeparator, childrenName) {
@@ -28,7 +31,28 @@ function normalizeTreePath(path, pathSeparator, childrenName) {
     .replace(fulllChildren, '')
     .replace(/\[(\d+)\]/g, '.$1')
     .split(pathSeparator)
-    .filter(p => p !== '')
+    .filter((p) => p !== '')
+}
+
+function getFromObject(obj, path) {
+  const pathArray = normalizeObjectPath(path)
+  return pathArray.reduce((node, pathPart) => {
+    if (!node) return node
+    return node[pathPart]
+  }, obj)
+}
+
+function setToObject(obj, path, value) {
+  const pathArray = normalizeObjectPath(path)
+  pathArray.reduce((node, pathPart, index, arr) => {
+    if (index + 1 === arr.length) {
+      node[pathPart] = value
+      return
+    }
+    if (node[pathPart]) return node[pathPart]
+    return (node[pathPart] = isFinite(arr[index + 1]) ? [] : {})
+  }, obj)
+  return obj
 }
 
 /**
@@ -122,32 +146,11 @@ function ensureTreePath(treeRoot, path, options = {}) {
   }, treeRoot)
 }
 
-function getFromObject(obj, path) {
-  const pathArray = normalizeObjectPath(path)
-  return pathArray.reduce((node, pathPart) => {
-    if (!node) return node
-    return node[pathPart]
-  }, obj)
-}
-
-function setToObject(obj, path, value) {
-  const pathArray = normalizeObjectPath(path)
-  pathArray.reduce((node, pathPart, index, arr) => {
-    if (index + 1 === arr.length) {
-      node[pathPart] = value
-      return
-    }
-    if (node[pathPart]) return node[pathPart]
-    return (node[pathPart] = isFinite(arr[index + 1]) ? [] : {})
-  }, obj)
-  return obj
-}
-
 /**
  * @typedef {object} WalkingNode
  * @property {string} key
  * @property {*} value
- * @property {string} type 'root' or 'branch' or 'leaf'
+ * @property {string} [type] 'root' or 'branch' or 'leaf'
  */
 
 /**
@@ -177,7 +180,7 @@ function walkObject(object, fn, options = {}) {
     { node: { key: '', type: 'root', value: object }, pathArray: [] },
   ]
 
-  for (var i = 0; i < nodesToLoop.length; i++) {
+  for (let i = 0; i < nodesToLoop.length; i++) {
     const { node, pathArray } = nodesToLoop[i]
     const isLeaf =
       typeof node.value !== 'object' ||
@@ -205,29 +208,38 @@ function walkObject(object, fn, options = {}) {
  * @param {*} treeRoot
  * @param {TraverseCallback} fn
  * @param {object} options Default Options: \
- *                 { childrenName: 'children', childNameKey: 'name', branchProps: ['props] }
+ *                 { childrenName: 'children', childNameKey: 'name' }
  * @param {string} [options.childrenName='children']
  * @param {string} [options.childNameKey='name']
- * @param {string[]} [options.branchProps=['props']]
  */
 function walkTree(treeRoot, fn, options = {}) {
-  const {
-    childrenName = 'children',
-    childNameKey = 'name',
-    branchProps = ['props'],
-  } = options || {}
-  const skipKeys = [childrenName, ...branchProps]
-  const walkFn = function (node, pathArray) {
-    if (skipKeys.includes(node.key)) return
-    node.key = /^\d+$/.test(node.key)
-      ? node.value[childNameKey] || node.key
-      : node.key
-    fn(
-      node,
-      pathArray.filter((p) => p.key !== '' && p.key !== childrenName)
-    )
+  const { childrenName = 'children', childNameKey = 'name' } = options || {}
+  const nodesToLoop = [
+    { node: { key: '', type: 'root', value: treeRoot }, pathArray: [] },
+  ]
+  for (let i = 0; i < nodesToLoop.length; i++) {
+    const { node, pathArray } = nodesToLoop[i]
+    fn(node, pathArray)
+    if (node.type === 'leaf') continue
+    const children = node.value[childrenName] || []
+    children.forEach((child, index) => {
+      const nextNode = {
+        key:
+          typeof child === 'object'
+            ? child[childNameKey] || `${index}`
+            : `${index}`,
+        value: child,
+        type:
+          typeof child === 'object' &&
+          child[childrenName] instanceof Array &&
+          child[childrenName] &&
+          child[childrenName].length
+            ? 'branch'
+            : 'leaf',
+      }
+      nodesToLoop.push({ node: nextNode, pathArray: [...pathArray, node] })
+    })
   }
-  walkObject(treeRoot, walkFn, { skipLeaf: true })
 }
 
 /**
@@ -247,7 +259,7 @@ function walkTree(treeRoot, fn, options = {}) {
  */
 function getPathValueMapArray(valueObject, options = {}) {
   const { separator = '.', judgeIsValue } = options || {}
-  const traverseOptions = { judgeIsValue: judgeIsValue, skipLeaf: false }
+  const traverseOptions = { judgeIsLeaf: judgeIsValue, skipLeaf: false }
 
   const walkFn = function (node, pathArray) {
     if (node.type !== 'leaf') return
@@ -325,8 +337,10 @@ function createObjectByTree(treeRoot, options = {}) {
 
   const walkFn = function (node, pathArray) {
     if (node.key && isFinite(node.key)) throw new Error(errorMessage)
-    const path = [...pathArray, node].map((p) => p.key).filter(p => p !== '')
-    const objNode = getFromObject(obj, path) || (setToObject(obj, path, {}) && getFromObject(obj, path))
+    const path = [...pathArray, node].map((p) => p.key).filter((p) => p !== '')
+    const objNode =
+      getFromObject(obj, path) ||
+      (setToObject(obj, path, {}) && getFromObject(obj, path))
     branchProps.forEach((p) => (objNode[p] = node.value[p]))
   }
 
@@ -338,34 +352,46 @@ function createObjectByTree(treeRoot, options = {}) {
  * Merge one or more tree-like objects to target
  * @param {object} target
  * @param {object} options Default Options: { branchProps: ['props'] }
- * @param {string[]} [options.branchProps=['props']]
+ * @param {string} [options.childrenName='children']
+ * @param {string} [options.childNameKey='name']
+ * @param {(target, source) => void} [options.mergeFn]
  * @param  {object[]} sources
  */
 function mergeTrees(target, options = {}, ...sources) {
-  const { branchProps = ['props'] } = options || {}
-  const mergeNode = function (targetNode, sourceNode) {
-    branchProps.forEach((p) => {
-      switch (getRealType(targetNode[p])) {
-        case 'object':
-          Object.assign(targetNode[p], sourceNode[p])
-          break
-        case 'array':
-          targetNode[p] = [
-            ...(sourceNode[p] instanceof Array ? sourceNode[p] : []),
-          ]
-        default:
-          targetNode[p] = sourceNode[p]
-      }
-    })
-  }
+  const { childrenName = 'children', childNameKey = 'name', mergeFn } =
+    options || {}
+  const mergeNode =
+    mergeFn ||
+    function (targetNode, sourceNode) {
+      Object.keys(sourceNode)
+        .filter((key) => ![childrenName, childNameKey].includes(key))
+        .forEach((p) => {
+          switch (getRealType(targetNode[p])) {
+            case 'object':
+              Object.assign(targetNode[p], sourceNode[p])
+              break
+            case 'array':
+              targetNode[p] = [
+                ...(sourceNode[p] instanceof Array ? sourceNode[p] : []),
+              ]
+            default:
+              targetNode[p] = sourceNode[p]
+          }
+        })
+    }
   sources.forEach((source) => {
-    walkTree(source, (node, pathArray) => {
-      const targetNode = ensureTreePath(
-        target,
-        [...pathArray, node].map((p) => p.key)
-      )
-      mergeNode(targetNode, node.value)
-    })
+    walkTree(
+      source,
+      (node, pathArray) => {
+        const targetNode = ensureTreePath(
+          target,
+          [...pathArray, node].map((p) => p.key),
+          { childNameKey, childrenName }
+        )
+        mergeNode(targetNode, node.value)
+      },
+      { childNameKey, childrenName }
+    )
   })
   return target
 }

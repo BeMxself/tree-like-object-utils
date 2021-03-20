@@ -129,6 +129,28 @@
       return p !== '';
     });
   }
+
+  function getFromObject(obj, path) {
+    var pathArray = normalizeObjectPath(path);
+    return pathArray.reduce(function (node, pathPart) {
+      if (!node) return node;
+      return node[pathPart];
+    }, obj);
+  }
+
+  function setToObject(obj, path, value) {
+    var pathArray = normalizeObjectPath(path);
+    pathArray.reduce(function (node, pathPart, index, arr) {
+      if (index + 1 === arr.length) {
+        node[pathPart] = value;
+        return;
+      }
+
+      if (node[pathPart]) return node[pathPart];
+      return node[pathPart] = isFinite(arr[index + 1]) ? [] : {};
+    }, obj);
+    return obj;
+  }
   /**
     ____        _     _ _         _____                 _   _                 
    |  _ \ _   _| |__ | (_) ___   |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
@@ -232,33 +254,11 @@
       return children[childIndex];
     }, treeRoot);
   }
-
-  function getFromObject(obj, path) {
-    var pathArray = normalizeObjectPath(path);
-    return pathArray.reduce(function (node, pathPart) {
-      if (!node) return node;
-      return node[pathPart];
-    }, obj);
-  }
-
-  function setToObject(obj, path, value) {
-    var pathArray = normalizeObjectPath(path);
-    pathArray.reduce(function (node, pathPart, index, arr) {
-      if (index + 1 === arr.length) {
-        node[pathPart] = value;
-        return;
-      }
-
-      if (node[pathPart]) return node[pathPart];
-      return node[pathPart] = isFinite(arr[index + 1]) ? [] : {};
-    }, obj);
-    return obj;
-  }
   /**
    * @typedef {object} WalkingNode
    * @property {string} key
    * @property {*} value
-   * @property {string} type 'root' or 'branch' or 'leaf'
+   * @property {string} [type] 'root' or 'branch' or 'leaf'
    */
 
   /**
@@ -299,7 +299,7 @@
       pathArray: []
     }];
 
-    var _loop = function _loop() {
+    var _loop = function _loop(i) {
       var _nodesToLoop$i = nodesToLoop[i],
           node = _nodesToLoop$i.node,
           pathArray = _nodesToLoop$i.pathArray;
@@ -321,7 +321,7 @@
     };
 
     for (var i = 0; i < nodesToLoop.length; i++) {
-      var _ret = _loop();
+      var _ret = _loop(i);
 
       if (_ret === "continue") continue;
     }
@@ -331,10 +331,9 @@
    * @param {*} treeRoot
    * @param {TraverseCallback} fn
    * @param {object} options Default Options: \
-   *                 { childrenName: 'children', childNameKey: 'name', branchProps: ['props] }
+   *                 { childrenName: 'children', childNameKey: 'name' }
    * @param {string} [options.childrenName='children']
    * @param {string} [options.childNameKey='name']
-   * @param {string[]} [options.branchProps=['props']]
    */
 
 
@@ -345,23 +344,42 @@
         _ref3$childrenName = _ref3.childrenName,
         childrenName = _ref3$childrenName === void 0 ? 'children' : _ref3$childrenName,
         _ref3$childNameKey = _ref3.childNameKey,
-        childNameKey = _ref3$childNameKey === void 0 ? 'name' : _ref3$childNameKey,
-        _ref3$branchProps = _ref3.branchProps,
-        branchProps = _ref3$branchProps === void 0 ? ['props'] : _ref3$branchProps;
+        childNameKey = _ref3$childNameKey === void 0 ? 'name' : _ref3$childNameKey;
 
-    var skipKeys = [childrenName].concat(_toConsumableArray(branchProps));
+    var nodesToLoop = [{
+      node: {
+        key: '',
+        type: 'root',
+        value: treeRoot
+      },
+      pathArray: []
+    }];
 
-    var walkFn = function walkFn(node, pathArray) {
-      if (skipKeys.includes(node.key)) return;
-      node.key = /^\d+$/.test(node.key) ? node.value[childNameKey] || node.key : node.key;
-      fn(node, pathArray.filter(function (p) {
-        return p.key !== '' && p.key !== childrenName;
-      }));
+    var _loop2 = function _loop2(i) {
+      var _nodesToLoop$i2 = nodesToLoop[i],
+          node = _nodesToLoop$i2.node,
+          pathArray = _nodesToLoop$i2.pathArray;
+      fn(node, pathArray);
+      if (node.type === 'leaf') return "continue";
+      var children = node.value[childrenName] || [];
+      children.forEach(function (child, index) {
+        var nextNode = {
+          key: _typeof(child) === 'object' ? child[childNameKey] || "".concat(index) : "".concat(index),
+          value: child,
+          type: _typeof(child) === 'object' && child[childrenName] instanceof Array && child[childrenName] && child[childrenName].length ? 'branch' : 'leaf'
+        };
+        nodesToLoop.push({
+          node: nextNode,
+          pathArray: [].concat(_toConsumableArray(pathArray), [node])
+        });
+      });
     };
 
-    walkObject(treeRoot, walkFn, {
-      skipLeaf: true
-    });
+    for (var i = 0; i < nodesToLoop.length; i++) {
+      var _ret2 = _loop2(i);
+
+      if (_ret2 === "continue") continue;
+    }
   }
   /**
    * Path-Value Pair
@@ -389,7 +407,7 @@
         judgeIsValue = _ref4.judgeIsValue;
 
     var traverseOptions = {
-      judgeIsValue: judgeIsValue,
+      judgeIsLeaf: judgeIsValue,
       skipLeaf: false
     };
 
@@ -511,7 +529,9 @@
    * Merge one or more tree-like objects to target
    * @param {object} target
    * @param {object} options Default Options: { branchProps: ['props'] }
-   * @param {string[]} [options.branchProps=['props']]
+   * @param {string} [options.childrenName='children']
+   * @param {string} [options.childNameKey='name']
+   * @param {(target, source) => void} [options.mergeFn]
    * @param  {object[]} sources
    */
 
@@ -520,11 +540,16 @@
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
     var _ref7 = options || {},
-        _ref7$branchProps = _ref7.branchProps,
-        branchProps = _ref7$branchProps === void 0 ? ['props'] : _ref7$branchProps;
+        _ref7$childrenName = _ref7.childrenName,
+        childrenName = _ref7$childrenName === void 0 ? 'children' : _ref7$childrenName,
+        _ref7$childNameKey = _ref7.childNameKey,
+        childNameKey = _ref7$childNameKey === void 0 ? 'name' : _ref7$childNameKey,
+        mergeFn = _ref7.mergeFn;
 
-    var mergeNode = function mergeNode(targetNode, sourceNode) {
-      branchProps.forEach(function (p) {
+    var mergeNode = mergeFn || function (targetNode, sourceNode) {
+      Object.keys(sourceNode).filter(function (key) {
+        return ![childrenName, childNameKey].includes(key);
+      }).forEach(function (p) {
         switch (getRealType(targetNode[p])) {
           case 'object':
             Object.assign(targetNode[p], sourceNode[p]);
@@ -547,8 +572,14 @@
       walkTree(source, function (node, pathArray) {
         var targetNode = ensureTreePath(target, [].concat(_toConsumableArray(pathArray), [node]).map(function (p) {
           return p.key;
-        }));
+        }), {
+          childNameKey: childNameKey,
+          childrenName: childrenName
+        });
         mergeNode(targetNode, node.value);
+      }, {
+        childNameKey: childNameKey,
+        childrenName: childrenName
       });
     });
     return target;

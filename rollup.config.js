@@ -3,20 +3,52 @@ import commonjs from '@rollup/plugin-commonjs'
 import resolve from '@rollup/plugin-node-resolve'
 import { terser } from 'rollup-plugin-terser'
 
-export default {
-  input: 'src/index.js',
-  output: {
-    file: 'dist/index.dist.js',
-    name: 'TreeObjectUtils',
-    format: 'umd',
+export default [
+  {
+    input: 'src/index.js',
+    output: [
+      {
+        file: 'dist/tree-like-object-utils.cjs.min.js',
+        name: 'TreeObjectUtils',
+        format: 'cjs',
+      },
+      {
+        file: 'dist/tree-like-object-utils.umd.min.js',
+        name: 'TreeObjectUtils',
+        format: 'umd',
+      }
+    ],
+    plugins: [
+      commonjs(),
+      resolve(),
+      babel({
+        exclude: 'node_modules/**',
+        babelHelpers: 'runtime'
+      }),
+      terser()
+    ],
   },
-  plugins: [
-    commonjs(),
-    resolve(),
-    babel({
-      exclude: 'node_modules/**',
-      babelHelpers: 'runtime'
-    }),
-    process.env.NODE_ENV === 'production' ? terser() : undefined
-  ],
-}
+  {
+    input: 'src/index.js',
+    output: [
+      {
+        file: 'dist/tree-like-object-utils.cjs.js',
+        name: 'TreeObjectUtils',
+        format: 'cjs',
+      },
+      {
+        file: 'dist/tree-like-object-utils.umd.js',
+        name: 'TreeObjectUtils',
+        format: 'umd',
+      }
+    ],
+    plugins: [
+      commonjs(),
+      resolve(),
+      babel({
+        exclude: 'node_modules/**',
+        babelHelpers: 'runtime'
+      })
+    ],
+  }
+]
