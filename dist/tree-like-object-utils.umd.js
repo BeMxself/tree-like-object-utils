@@ -129,6 +129,22 @@
       return p !== '';
     });
   }
+  /**
+    ____        _     _ _         _____                 _   _                 
+   |  _ \ _   _| |__ | (_) ___   |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
+   | |_) | | | | '_ \| | |/ __|  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+   |  __/| |_| | |_) | | | (__   |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+   |_|    \__,_|_.__/|_|_|\___|  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+                                                                              
+  */
+
+  /**
+   * Similar to lodash.get, but no defaultValue
+   * @param {*} obj 
+   * @param {*} path 
+   * @returns value or undefined
+   */
+
 
   function getFromObject(obj, path) {
     var pathArray = normalizeObjectPath(path);
@@ -137,6 +153,14 @@
       return node[pathPart];
     }, obj);
   }
+  /**
+   * Similar to lodash.set
+   * @param {*} obj 
+   * @param {*} path 
+   * @param {*} value 
+   * @returns obj
+   */
+
 
   function setToObject(obj, path, value) {
     var pathArray = normalizeObjectPath(path);
@@ -151,15 +175,6 @@
     }, obj);
     return obj;
   }
-  /**
-    ____        _     _ _         _____                 _   _                 
-   |  _ \ _   _| |__ | (_) ___   |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
-   | |_) | | | | '_ \| | |/ __|  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
-   |  __/| |_| | |_) | | | (__   |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
-   |_|    \__,_|_.__/|_|_|\___|  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-                                                                              
-  */
-
   /**
    *
    * @typedef {object} TreePathOptions
@@ -210,7 +225,7 @@
    * @param {object} treeRoot
    * @param {string|string[]} path
    * @param {TreePathOptions} options
-   * @returns Ensurer Function
+   * @returns node of path
    */
 
 
@@ -528,10 +543,10 @@
   /**
    * Merge one or more tree-like objects to target
    * @param {object} target
-   * @param {object} options Default Options: { branchProps: ['props'] }
+   * @param {object} options
    * @param {string} [options.childrenName='children']
    * @param {string} [options.childNameKey='name']
-   * @param {(target, source) => void} [options.mergeFn]
+   * @param {(targetNode, sourceNode) => void} [options.mergeFn]
    * @param  {object[]} sources
    */
 
@@ -588,9 +603,11 @@
   exports.createObjectByTree = createObjectByTree;
   exports.createTreeByObject = createTreeByObject;
   exports.ensureTreePath = ensureTreePath;
+  exports.getFromObject = getFromObject;
   exports.getFromTree = getFromTree;
   exports.getPathValueMapArray = getPathValueMapArray;
   exports.mergeTrees = mergeTrees;
+  exports.setToObject = setToObject;
   exports.walkObject = walkObject;
   exports.walkTree = walkTree;
 

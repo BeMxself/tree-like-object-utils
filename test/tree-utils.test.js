@@ -52,6 +52,11 @@ describe('getFromTree', () => {
       testTree.children[0].children[1]
     )
   })
+  it('get [0][1]', () => {
+    expect(getFromTree(testTree, '[0][1]')).toMatchObject(
+      testTree.children[0].children[1]
+    )
+  })
 })
 
 describe('ensureTreePath', () => {

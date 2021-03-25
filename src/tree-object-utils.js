@@ -2,7 +2,7 @@
  * @Author: Song Mingxu
  * @Date: 2021-03-12 16:36:18
  * @LastEditors: Song Mingxu
- * @LastEditTime: 2021-03-23 11:08:48
+ * @LastEditTime: 2021-03-25 19:47:01
  * @Description: Tree & Object Utils
  */
 import { getRealType, findIndexByKey } from './utils'
@@ -34,6 +34,21 @@ function normalizeTreePath(path, pathSeparator, childrenName) {
     .filter((p) => p !== '')
 }
 
+/**
+  ____        _     _ _         _____                 _   _                 
+ |  _ \ _   _| |__ | (_) ___   |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
+ | |_) | | | | '_ \| | |/ __|  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+ |  __/| |_| | |_) | | | (__   |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+ |_|    \__,_|_.__/|_|_|\___|  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+                                                                            
+*/
+
+/**
+ * Similar to lodash.get, but no defaultValue
+ * @param {*} obj 
+ * @param {*} path 
+ * @returns value or undefined
+ */
 function getFromObject(obj, path) {
   const pathArray = normalizeObjectPath(path)
   return pathArray.reduce((node, pathPart) => {
@@ -42,6 +57,13 @@ function getFromObject(obj, path) {
   }, obj)
 }
 
+/**
+ * Similar to lodash.set
+ * @param {*} obj 
+ * @param {*} path 
+ * @param {*} value 
+ * @returns obj
+ */
 function setToObject(obj, path, value) {
   const pathArray = normalizeObjectPath(path)
   pathArray.reduce((node, pathPart, index, arr) => {
@@ -54,15 +76,6 @@ function setToObject(obj, path, value) {
   }, obj)
   return obj
 }
-
-/**
-  ____        _     _ _         _____                 _   _                 
- |  _ \ _   _| |__ | (_) ___   |  ___|   _ _ __   ___| |_(_) ___  _ __  ___ 
- | |_) | | | | '_ \| | |/ __|  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
- |  __/| |_| | |_) | | | (__   |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
- |_|    \__,_|_.__/|_|_|\___|  |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
-                                                                            
-*/
 
 /**
  *
@@ -111,7 +124,7 @@ function getFromTree(treeRoot, path, options = {}) {
  * @param {object} treeRoot
  * @param {string|string[]} path
  * @param {TreePathOptions} options
- * @returns Ensurer Function
+ * @returns node of path
  */
 function ensureTreePath(treeRoot, path, options = {}) {
   const {
@@ -351,10 +364,10 @@ function createObjectByTree(treeRoot, options = {}) {
 /**
  * Merge one or more tree-like objects to target
  * @param {object} target
- * @param {object} options Default Options: { branchProps: ['props'] }
+ * @param {object} options
  * @param {string} [options.childrenName='children']
  * @param {string} [options.childNameKey='name']
- * @param {(target, source) => void} [options.mergeFn]
+ * @param {(targetNode, sourceNode) => void} [options.mergeFn]
  * @param  {object[]} sources
  */
 function mergeTrees(target, options = {}, ...sources) {
@@ -397,6 +410,8 @@ function mergeTrees(target, options = {}, ...sources) {
 }
 
 export {
+  getFromObject,
+  setToObject,
   getFromTree,
   ensureTreePath,
   getPathValueMapArray,
