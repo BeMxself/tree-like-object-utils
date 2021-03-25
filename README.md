@@ -1,11 +1,3 @@
-<!--
- * @Author: Song Mingxu
- * @Date: 2021-03-25 18:20:59
- * @LastEditors: Song Mingxu
- * @LastEditTime: 2021-03-25 20:04:32
- * @Description: file content
--->
-
 # tree-like-object-utils 中文文档
 
 本函数库的目的是操作树形结构的 js 对象。
@@ -92,6 +84,7 @@ getFromTree(treeRoot, path, options?)
 ```
 
 options:
+
 ```js
 /**
  * @typedef {object} TreePathOptions
@@ -109,25 +102,27 @@ ensureTreePath(treeRoot, path, options?)
 
 options: _同上_
 
-### getPathValueMapArray 把一个js object值对象转化成 { path, value } 数组
+### getPathValueMapArray 把一个 js object 值对象转化成 { path, value } 数组
 
 ```js
 getPathValueMapArray(valueObject, options?)
 ```
-主要用途是用于为框架的客户程序员提供一种能力：用一个普通的js对象来承载对树的注入修改，表达方式更加简洁
+
+主要用途是用于为框架的客户程序员提供一种能力：用一个普通的 js 对象来承载对树的注入修改，表达方式更加简洁
 
 options:
+
 ```js
 /**
  * @typedef OptionsDefine
  * @property {string} [options.separator]              生成的路径的分隔符，默认为 '.'
  * @property {WalkingNodeJudge} [options.judgeIsValue] 判断节点是否为值的回调函数，如果判断是一个值的话就不再深入遍历，定义见下
- * 
+ *
  * @callback WalkingNodeJudge         判断节点回调函数，返回布尔值
  * @param {WalkingNode} node          当前节点
  * @param {WalkingNode[]} pathArray   从根到当前的路径上的各级父节点
  * @returns {boolean}
- * 
+ *
  * @typedef {object} WalkingNode      节点定义
  * @property {string} key             该节点在父节点上的属性名或数组下标
  * @property {*} value                节点对象/值
@@ -156,9 +151,9 @@ options:
 walkTree(treeRoot, fn, options?)
 ```
 
-遍历一棵树，使用方法详见JsDoc注释
+遍历一棵树，使用方法详见 JSDoc 注释
 
-### walkObject 遍历普通js对象
+### walkObject 遍历普通 js 对象
 
 ```js
 /**
@@ -172,8 +167,8 @@ walkTree(treeRoot, fn, options?)
 walkObject(object, fn, options)
 ```
 
-用法与walkTree差不多，只是增加了一个判断当前节点是否是叶节点的回调函数`judgeIsLeaf`，和是否跳过叶节点的选项`skipLeaf`。
-默认只要对象的属性值类型是object或者array就继续遍历，当需要在某种条件下不继续遍历，通过指定`judgeIsLeaf`来判断，并保持`skipLeaf`为`true`
+用法与 walkTree 差不多，只是增加了一个判断当前节点是否是叶节点的回调函数`judgeIsLeaf`，和是否跳过叶节点的选项`skipLeaf`。
+默认只要对象的属性值类型是 object 或者 array 就继续遍历，当需要在某种条件下不继续遍历，通过指定`judgeIsLeaf`来判断，并保持`skipLeaf`为`true`
 
 ### createTreeByObject 通过一个普通对象创建树形对象
 
@@ -192,16 +187,15 @@ walkObject(object, fn, options)
  * @param {TreeStructDescription} options
  * @returns {object} tree object
  */
-function createTreeByObject(obj, options = {}) 
+function createTreeByObject(obj, options = {})
 ```
 
-觉得可能有用就写了，但是貌似没用上😂
+觉得可能有用就写了，但是貌似没用上 😂
 如果要用的话就是一个 option 需要注意，branchProps 是用于指定哪些属性要作为当前节点的属性而不要把它转变成子节点（对象和数组直接引用赋值，没有拷贝）。
 
 ### createObjectByTree 通过一个树形对象创建普通对象
 
 上面函数的逆向参数雷同
-
 
 ### mergeTrees 合并多个树形对象
 
@@ -219,11 +213,12 @@ mergeTrees(target, options?, ...sources)
 ```
 
 需要注意：
-1. 默认合并方式是数组直接覆盖，对象用Object.assign的方式复写，都是浅拷贝，需要指定`options.mergeFn`回调函数。
+
+1. 默认合并方式是数组直接覆盖，对象用 Object.assign 的方式复写，都是浅拷贝，需要指定`options.mergeFn`回调函数。
 2. `mergeFn`的参数是节点，并不是`WalkingNode`类型的包裹了节点类型等信息的对象。
 
+### getFromObject 类似于 lodash.get（无 defaultValue 参数）
 
-### getFromObject 类似于lodash.get（无 defaultValue 参数）
-### setToObject 类似于lodash.set
+### setToObject 类似于 lodash.set
 
-这两个函数是为了缩减打包大小重新实现的lodash的两个方法，用法与lodash的两个方法一样。
+这两个函数是为了缩减打包大小重新实现的 lodash 的两个方法，用法与 lodash 的两个方法一样。
