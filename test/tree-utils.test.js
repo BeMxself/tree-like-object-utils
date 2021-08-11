@@ -5,6 +5,7 @@ import {
   ensureTreePath,
   getPathValueMapArray,
   walkTree,
+  findTree,
   walkObject,
   createTreeByObject,
   createObjectByTree,
@@ -68,19 +69,22 @@ describe('ensureTreePath', () => {
   it('ensur {} "childA"', () => {
     const tree = {}
     ensureTreePath(tree, 'childA')
-    expect(tree).toMatchObject({children: [{name: 'childA'}]})
+    expect(tree).toMatchObject({ children: [{ name: 'childA' }] })
   })
   it('ensur {} "childA.childA1"', () => {
     const tree = {}
     ensureTreePath(tree, 'childA.childA1')
-    expect(tree).toMatchObject({children: [{name: 'childA', children: [{name: 'childA1'}]}]})
+    expect(tree).toMatchObject({
+      children: [{ name: 'childA', children: [{ name: 'childA1' }] }],
+    })
   })
   it('ensur {} "children[0].childA1"', () => {
     const tree = {}
     ensureTreePath(tree, 'children[0].childA1')
-    expect(tree).toMatchObject({children: [{name: undefined, children: [{name: 'childA1'}]}]})
+    expect(tree).toMatchObject({
+      children: [{ name: undefined, children: [{ name: 'childA1' }] }],
+    })
   })
-
 })
 
 describe('getPathValueMapArray', () => {
@@ -117,17 +121,23 @@ describe('walkTree', () => {
   var TEST_TABLE = [
     [
       { props: {} },
-      (branch) => (branch.value.footprint = 1),
+      (branch) => {
+        branch.value.footprint = 1
+      },
       { props: {}, footprint: 1 },
     ],
     [
       { children: [{}, {}] },
-      (branch) => (branch.value.footprint = 1),
+      (branch) => {
+        branch.value.footprint = 1
+      },
       { footprint: 1, children: [{ footprint: 1 }, { footprint: 1 }] },
     ],
     [
       { children: [{ children: [{}] }, {}] },
-      (branch) => (branch.value.footprint = 1),
+      (branch) => {
+        branch.value.footprint = 1
+      },
       {
         footprint: 1,
         children: [
@@ -143,17 +153,39 @@ describe('walkTree', () => {
   })
 })
 
+describe('findTree', () => {
+  const root = TEST_DATA.simpleTree
+  it('find root', () => {
+    const {value} = findTree(root, 'node')
+    expect(value).toMatchObject(root)
+  })
+  it('find node', () => {
+    const {value} = findTree(root, 'child_0_0')
+    expect(value).toMatchObject({ name: 'child_0_0' })
+  })
+})
+
 describe('walkObject', () => {
   var TEST_TABLE = [
-    [{}, (branch) => (branch.value.footprint = 1), { footprint: 1 }],
+    [
+      {},
+      (branch) => {
+        branch.value.footprint = 1
+      },
+      { footprint: 1 },
+    ],
     [
       { b: {}, c: 1, d: {} },
-      (branch) => (branch.value.footprint = 1),
+      (branch) => {
+        branch.value.footprint = 1
+      },
       { b: { footprint: 1 }, c: 1, footprint: 1, d: { footprint: 1 } },
     ],
     [
       { b: { b1: {} }, c: 1 },
-      (branch) => (branch.value.footprint = 1),
+      (branch) => {
+        branch.value.footprint = 1
+      },
       { b: { footprint: 1, b1: { footprint: 1 } }, c: 1, footprint: 1 },
     ],
   ]

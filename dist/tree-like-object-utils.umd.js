@@ -280,6 +280,7 @@
    * @callback TraverseCallback
    * @param {WalkingNode} node
    * @param {WalkingNode[]} pathArray
+   * @returns {boolean} stop traverse if true
    */
 
   /**
@@ -321,7 +322,9 @@
       var isLeaf = _typeof(node.value) !== 'object' || judgeIsLeaf instanceof Function && judgeIsLeaf(node, node.pathArray);
       node.type = node.type || (isLeaf ? 'leaf' : 'branch');
       if (isLeaf && skipLeaf) return "continue";
-      fn(node, pathArray);
+      if (fn(node, pathArray)) return {
+        v: void 0
+      };
       if (isLeaf) return "continue";
       Object.keys(node.value).forEach(function (key) {
         nodesToLoop.push({
@@ -339,6 +342,7 @@
       var _ret = _loop(i);
 
       if (_ret === "continue") continue;
+      if (_typeof(_ret) === "object") return _ret.v;
     }
   }
   /**
@@ -374,7 +378,9 @@
       var _nodesToLoop$i2 = nodesToLoop[i],
           node = _nodesToLoop$i2.node,
           pathArray = _nodesToLoop$i2.pathArray;
-      fn(node, pathArray);
+      if (fn(node, pathArray)) return {
+        v: void 0
+      };
       if (node.type === 'leaf') return "continue";
       var children = node.value[childrenName] || [];
       children.forEach(function (child, index) {
@@ -394,7 +400,36 @@
       var _ret2 = _loop2(i);
 
       if (_ret2 === "continue") continue;
+      if (_typeof(_ret2) === "object") return _ret2.v;
     }
+  }
+  /**
+   * Find node in a tree-like Object
+   * @param {*} treeRoot
+   * @param {string|TraverseCallback} finder name or TraverseCallback
+   * @param {object} options Default Options: \
+   *                 { childrenName: 'children', childNameKey: 'name' }
+   * @param {string} [options.childrenName='children']
+   * @param {string} [options.childNameKey='name']
+   * @returns {{key, value, type}|null}
+   */
+
+
+  function findTree(treeRoot, finder) {
+    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var found = null;
+    var finderFn = finder;
+    if (typeof finder === 'string') finderFn = function finderFn(_ref4) {
+      var value = _ref4.value;
+      return value.name === finder;
+    };
+    walkTree(treeRoot, function (node, pathArray) {
+      if (finderFn(node, pathArray)) {
+        found = node;
+        return true;
+      }
+    }, options);
+    return found;
   }
   /**
    * Path-Value Pair
@@ -416,10 +451,10 @@
   function getPathValueMapArray(valueObject) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    var _ref4 = options || {},
-        _ref4$separator = _ref4.separator,
-        separator = _ref4$separator === void 0 ? '.' : _ref4$separator,
-        judgeIsValue = _ref4.judgeIsValue;
+    var _ref5 = options || {},
+        _ref5$separator = _ref5.separator,
+        separator = _ref5$separator === void 0 ? '.' : _ref5$separator,
+        judgeIsValue = _ref5.judgeIsValue;
 
     var traverseOptions = {
       judgeIsLeaf: judgeIsValue,
@@ -462,13 +497,13 @@
   function createTreeByObject(obj) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    var _ref5 = options || {},
-        _ref5$childNameKey = _ref5.childNameKey,
-        childNameKey = _ref5$childNameKey === void 0 ? 'name' : _ref5$childNameKey,
-        _ref5$childrenName = _ref5.childrenName,
-        childrenName = _ref5$childrenName === void 0 ? 'children' : _ref5$childrenName,
-        _ref5$branchProps = _ref5.branchProps,
-        branchProps = _ref5$branchProps === void 0 ? ['props'] : _ref5$branchProps;
+    var _ref6 = options || {},
+        _ref6$childNameKey = _ref6.childNameKey,
+        childNameKey = _ref6$childNameKey === void 0 ? 'name' : _ref6$childNameKey,
+        _ref6$childrenName = _ref6.childrenName,
+        childrenName = _ref6$childrenName === void 0 ? 'children' : _ref6$childrenName,
+        _ref6$branchProps = _ref6.branchProps,
+        branchProps = _ref6$branchProps === void 0 ? ['props'] : _ref6$branchProps;
 
     var tree = {};
 
@@ -510,13 +545,13 @@
   function createObjectByTree(treeRoot) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    var _ref6 = options || {},
-        _ref6$childNameKey = _ref6.childNameKey,
-        childNameKey = _ref6$childNameKey === void 0 ? 'name' : _ref6$childNameKey,
-        _ref6$childrenName = _ref6.childrenName,
-        childrenName = _ref6$childrenName === void 0 ? 'children' : _ref6$childrenName,
-        _ref6$branchProps = _ref6.branchProps,
-        branchProps = _ref6$branchProps === void 0 ? ['props'] : _ref6$branchProps;
+    var _ref7 = options || {},
+        _ref7$childNameKey = _ref7.childNameKey,
+        childNameKey = _ref7$childNameKey === void 0 ? 'name' : _ref7$childNameKey,
+        _ref7$childrenName = _ref7.childrenName,
+        childrenName = _ref7$childrenName === void 0 ? 'children' : _ref7$childrenName,
+        _ref7$branchProps = _ref7.branchProps,
+        branchProps = _ref7$branchProps === void 0 ? ['props'] : _ref7$branchProps;
 
     var obj = {};
     var errorMessage = "Illegal Tree Object, all children node must contains '".concat(childNameKey, "' property");
@@ -554,16 +589,16 @@
   function mergeTrees(target) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-    var _ref7 = options || {},
-        _ref7$childrenName = _ref7.childrenName,
-        childrenName = _ref7$childrenName === void 0 ? 'children' : _ref7$childrenName,
-        _ref7$childNameKey = _ref7.childNameKey,
-        childNameKey = _ref7$childNameKey === void 0 ? 'name' : _ref7$childNameKey,
-        mergeFn = _ref7.mergeFn;
+    var _ref8 = options || {},
+        _ref8$childrenName = _ref8.childrenName,
+        childrenName = _ref8$childrenName === void 0 ? 'children' : _ref8$childrenName,
+        _ref8$childNameKey = _ref8.childNameKey,
+        childNameKey = _ref8$childNameKey === void 0 ? 'name' : _ref8$childNameKey,
+        mergeFn = _ref8.mergeFn;
 
     var mergeNode = mergeFn || function (targetNode, sourceNode) {
       Object.keys(sourceNode).filter(function (key) {
-        return ![childrenName, childNameKey].includes(key);
+        return ![childrenName].includes(key);
       }).forEach(function (p) {
         switch (getRealType(targetNode[p])) {
           case 'object':
@@ -603,6 +638,7 @@
   exports.createObjectByTree = createObjectByTree;
   exports.createTreeByObject = createTreeByObject;
   exports.ensureTreePath = ensureTreePath;
+  exports.findTree = findTree;
   exports.getFromObject = getFromObject;
   exports.getFromTree = getFromTree;
   exports.getPathValueMapArray = getPathValueMapArray;

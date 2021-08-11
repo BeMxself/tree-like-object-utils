@@ -2,7 +2,7 @@
  * @Author: Song Mingxu
  * @Date: 2021-03-12 16:36:18
  * @LastEditors: Song Mingxu
- * @LastEditTime: 2021-03-25 19:47:01
+ * @LastEditTime: 2021-08-11 12:38:49
  * @Description: Tree & Object Utils
  */
 import { getRealType, findIndexByKey } from './utils'
@@ -170,6 +170,7 @@ function ensureTreePath(treeRoot, path, options = {}) {
  * @callback TraverseCallback
  * @param {WalkingNode} node
  * @param {WalkingNode[]} pathArray
+ * @returns {boolean} stop traverse if true
  */
 
 /**
@@ -203,7 +204,7 @@ function walkObject(object, fn, options = {}) {
 
     if (isLeaf && skipLeaf) continue
 
-    fn(node, pathArray)
+    if (fn(node, pathArray)) return
 
     if (isLeaf) continue
 
@@ -232,7 +233,7 @@ function walkTree(treeRoot, fn, options = {}) {
   ]
   for (let i = 0; i < nodesToLoop.length; i++) {
     const { node, pathArray } = nodesToLoop[i]
-    fn(node, pathArray)
+    if (fn(node, pathArray)) return
     if (node.type === 'leaf') continue
     const children = node.value[childrenName] || []
     children.forEach((child, index) => {
@@ -255,6 +256,28 @@ function walkTree(treeRoot, fn, options = {}) {
   }
 }
 
+/**
+ * Find node in a tree-like Object
+ * @param {*} treeRoot
+ * @param {string|TraverseCallback} finder name or TraverseCallback
+ * @param {object} options Default Options: \
+ *                 { childrenName: 'children', childNameKey: 'name' }
+ * @param {string} [options.childrenName='children']
+ * @param {string} [options.childNameKey='name']
+ * @returns {{key, value, type}|null}
+ */
+function findTree(treeRoot, finder, options = {}){
+  var found = null
+  var finderFn = finder
+  if (typeof finder === 'string') finderFn = ({value}) => value.name === finder
+  walkTree(treeRoot, (node, pathArray)=>{
+    if (finderFn(node, pathArray)){
+      found = node
+      return true
+    }
+  }, options)
+  return found
+}
 /**
  * Path-Value Pair
  * @typedef {object} PathValuePair
@@ -377,7 +400,7 @@ function mergeTrees(target, options = {}, ...sources) {
     mergeFn ||
     function (targetNode, sourceNode) {
       Object.keys(sourceNode)
-        .filter((key) => ![childrenName, childNameKey].includes(key))
+        .filter((key) => ![childrenName].includes(key))
         .forEach((p) => {
           switch (getRealType(targetNode[p])) {
             case 'object':
@@ -416,6 +439,7 @@ export {
   ensureTreePath,
   getPathValueMapArray,
   walkTree,
+  findTree,
   walkObject,
   createTreeByObject,
   createObjectByTree,

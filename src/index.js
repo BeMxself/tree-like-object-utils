@@ -2,7 +2,7 @@
  * @Author: Song Mingxu
  * @Date: 2021-03-19 11:46:52
  * @LastEditors: Song Mingxu
- * @LastEditTime: 2021-03-25 19:41:53
+ * @LastEditTime: 2021-08-11 11:48:29
  * @Description: file content
  */
 import {
@@ -12,6 +12,7 @@ import {
   ensureTreePath,
   getPathValueMapArray,
   walkTree,
+  findTree,
   walkObject,
   createTreeByObject,
   createObjectByTree,
@@ -25,6 +26,7 @@ export {
   ensureTreePath,
   getPathValueMapArray,
   walkTree,
+  findTree,
   walkObject,
   createTreeByObject,
   createObjectByTree,

@@ -153,6 +153,22 @@ walkTree(treeRoot, fn, options?)
 
 遍历一棵树，使用方法详见 JSDoc 注释
 
+### findTree 在树形对象中查找节点
+```js
+/**
+ * Find node in a tree-like Object
+ * @param {*} treeRoot
+ * @param {string|TraverseCallback} finder name or TraverseCallback
+ * @param {object} options Default Options: \
+ *                 { childrenName: 'children', childNameKey: 'name' }
+ * @param {string} [options.childrenName='children']
+ * @param {string} [options.childNameKey='name']
+ * @returns {{key, value, type}|null}
+ */
+```
+
+查找树中的节点，使用方法详见 JSDoc 注释
+
 ### walkObject 遍历普通 js 对象
 
 ```js
@@ -208,6 +224,7 @@ function createTreeByObject(obj, options = {})
  * @param {string} [options.childNameKey='name']                略
  * @param {(targetNode, sourceNode) => void} [options.mergeFn]  自定义合并方式的回调函数
  * @param  {object[]} sources
+ * @returns {object}
  */
 mergeTrees(target, options?, ...sources)
 ```
