@@ -2,7 +2,7 @@
  * @Author: Song Mingxu
  * @Date: 2021-03-12 16:36:18
  * @LastEditors: Song Mingxu
- * @LastEditTime: 2021-08-11 12:38:49
+ * @LastEditTime: 2021-08-13 21:40:25
  * @Description: Tree & Object Utils
  */
 import { getRealType, findIndexByKey } from './utils'
@@ -135,7 +135,7 @@ function ensureTreePath(treeRoot, path, options = {}) {
 
   const pushEmptyChild = function (childrenArray, count) {
     for (let i = 0; i < count; i++) {
-      childrenArray.push({ [childNameKey]: undefined, [childrenName]: [] })
+      childrenArray.push({ [childNameKey]: undefined })
     }
   }
   const pathNodes = normalizeTreePath(path, pathSeparator, childrenName)
@@ -147,7 +147,7 @@ function ensureTreePath(treeRoot, path, options = {}) {
       : findIndexByKey(children, childNameKey, pathPart)
 
     if (childIndex === -1) {
-      const child = { [childNameKey]: pathPart, [childrenName]: [] }
+      const child = { [childNameKey]: pathPart }
       children.push(child)
       return child
     }

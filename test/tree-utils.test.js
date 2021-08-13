@@ -254,7 +254,7 @@ describe('mergeTrees', () => {
   it(`merge: {} <= {children: [{name: 'a', props: {prop1: 'b'}}]}`, () => {
     expect(
       mergeTrees({}, {}, { children: [{ name: 'a', props: { prop1: 'b' } }] })
-    ).toMatchObject({ children: [{ name: 'a', props: { prop1: 'b' } }] })
+    ).toEqual({ children: [{ name: 'a', props: { prop1: 'b' } }] })
   })
   it(`merge: {} <= {children: [{name: 'a', props: {prop1: 'b'}}]}, {children: [{name: 'a', props: {prop1: 'c'}}]}`, () => {
     expect(
@@ -264,7 +264,7 @@ describe('mergeTrees', () => {
         { children: [{ name: 'a', props: { prop1: 'b' } }] },
         { children: [{ name: 'a', props: { prop1: 'c' } }] }
       )
-    ).toMatchObject({ children: [{ name: 'a', props: { prop1: 'c' } }] })
+    ).toEqual({ children: [{ name: 'a', props: { prop1: 'c' } }] })
   })
   it(`merge: {} <= {children: [{name: 'a', props: {prop1: 'b'}}]}, {props: {d: 2}}`, () => {
     expect(
@@ -274,9 +274,13 @@ describe('mergeTrees', () => {
         { children: [{ name: 'a', props: { prop1: 'b' } }] },
         { props: { d: 2 } }
       )
-    ).toMatchObject({
+    ).toEqual({
       props: { d: 2 },
       children: [{ name: 'a', props: { prop1: 'b' } }],
     })
+  })
+  it('merge: {} <= {}', () => {
+    const merged = mergeTrees({}, {}, {})
+    expect(merged).toEqual({})
   })
 })

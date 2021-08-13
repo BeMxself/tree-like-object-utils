@@ -242,9 +242,7 @@
 
     var pushEmptyChild = function pushEmptyChild(childrenArray, count) {
       for (var i = 0; i < count; i++) {
-        var _childrenArray$push;
-
-        childrenArray.push((_childrenArray$push = {}, _defineProperty(_childrenArray$push, childNameKey, undefined), _defineProperty(_childrenArray$push, childrenName, []), _childrenArray$push));
+        childrenArray.push(_defineProperty({}, childNameKey, undefined));
       }
     };
 
@@ -255,9 +253,8 @@
       var childIndex = isFinite(pathPart) ? pathPart : findIndexByKey(children, childNameKey, pathPart);
 
       if (childIndex === -1) {
-        var _child;
+        var child = _defineProperty({}, childNameKey, pathPart);
 
-        var child = (_child = {}, _defineProperty(_child, childNameKey, pathPart), _defineProperty(_child, childrenName, []), _child);
         children.push(child);
         return child;
       }
